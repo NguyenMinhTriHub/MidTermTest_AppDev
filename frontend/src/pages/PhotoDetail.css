@@ -1,0 +1,45 @@
+.photo-detail-container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 20px;
+}
+
+.back-btn {
+	padding: 10px 20px;
+	background-color: #4285f4;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-bottom: 20px;
+}
+
+.back-btn:hover {
+	background-color: #3367d6;
+}
+
+.photo-detail {
+	display: flex;
+	gap: 20px;
+}
+
+.photo-detail-image {
+	max-width: 60%;
+	height: auto;
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.photo-detail-info {
+	flex: 1;
+}
+
+.photo-detail-info h1 {
+	color: #333;
+	margin-bottom: 10px;
+}
+
+.photo-detail-info p {
+	color: #666;
+	line-height: 1.6;
+}

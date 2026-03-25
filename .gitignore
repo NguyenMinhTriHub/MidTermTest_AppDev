@@ -1,0 +1,38 @@
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Backend (Python/FastAPI) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+*.db
+*.sqlite3
+
+# --- Frontend (React/Node.js) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# --- Build & Distribution ---
+build/
+dist/
+.serverless/
+
+# --- Logs & Temp ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
