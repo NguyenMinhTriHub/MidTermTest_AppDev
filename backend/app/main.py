@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import bcrypt, hashlib, os, shutil
 from datetime import datetime
 
-# Cấu hình thư mục và Database
+# Cấu hình lưu trữ và Database
 UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 SQLALCHEMY_DATABASE_URL = "sqlite:///./gallery.db"
@@ -14,7 +14,7 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Models
+# Models [cite: 47-58]
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -42,7 +42,7 @@ def get_db():
     try: yield db
     finally: db.close()
 
-# Helpers bảo mật
+# Bảo mật
 def get_password_hash(password: str):
     pwd_hash = hashlib.sha256(password.encode()).hexdigest()
     return bcrypt.hashpw(pwd_hash.encode(), bcrypt.gensalt()).decode('utf-8')
@@ -51,19 +51,26 @@ def verify_password(plain_password: str, hashed_password: str):
     pwd_hash = hashlib.sha256(plain_password.encode()).hexdigest()
     return bcrypt.checkpw(pwd_hash.encode(), hashed_password.encode())
 
-# Endpoints
+# API Endpoints
 @app.post("/register")
 def register(user: dict, db: Session = Depends(get_db)):
     new_user = User(username=user['username'], email=user['email'], hashed_password=get_password_hash(user['password']))
     db.add(new_user); db.commit()
-    return {"message": "Success"}
+    return {"status": "ok"}
 
 @app.post("/login")
 def login(user: dict, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user['username']).first()
     if not db_user or not verify_password(user['password'], db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Lỗi đăng nhập")
+        raise HTTPException(status_code=400, detail="Error")
     return {"username": db_user.username}
+
+@app.get("/photos")
+def get_photos(q: str = None, db: Session = Depends(get_db)):
+    query = db.query(Photo)
+    if q:
+        query = query.filter(Photo.title.contains(q)) # Tìm kiếm theo tên [cite: 41]
+    return query.all()
 
 @app.post("/upload")
 async def upload_file(title: str = Form(...), description: str = Form(None), file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -75,16 +82,18 @@ async def upload_file(title: str = Form(...), description: str = Form(None), fil
     db.add(new_photo); db.commit()
     return {"image_url": image_url}
 
-@app.get("/photos")
-def get_photos(db: Session = Depends(get_db)):
-    return db.query(Photo).all()
-
-# Chức năng xem chi tiết ảnh
 @app.get("/photos/{photo_id}")
-def get_photo_detail(photo_id: int, db: Session = Depends(get_db)):
+def get_detail(photo_id: int, db: Session = Depends(get_db)):
+    return db.query(Photo).filter(Photo.id == photo_id).first()
+
+@app.put("/photos/{photo_id}")
+def update_photo(photo_id: int, data: dict, db: Session = Depends(get_db)):
     photo = db.query(Photo).filter(Photo.id == photo_id).first()
-    if not photo: raise HTTPException(status_code=404, detail="Không tìm thấy ảnh")
-    return photo
+    if photo:
+        photo.title = data.get("title", photo.title)
+        photo.description = data.get("description", photo.description)
+        db.commit()
+    return {"status": "updated"}
 
 @app.delete("/photos/{id}")
 def delete_photo(id: int, db: Session = Depends(get_db)):
