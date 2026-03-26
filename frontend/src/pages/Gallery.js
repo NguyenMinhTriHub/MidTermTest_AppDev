@@ -10,12 +10,8 @@ const Gallery = () => {
   const user = localStorage.getItem("user");
 
   const loadPhotos = async () => {
-    try {
-      const res = await axios.get("http://localhost:8000/photos");
-      setPhotos(res.data);
-    } catch (err) {
-      console.error("Lỗi tải ảnh");
-    }
+    const res = await axios.get("http://localhost:8000/photos");
+    setPhotos(res.data);
   };
 
   useEffect(() => {
@@ -24,56 +20,39 @@ const Gallery = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file) return alert("Vui lòng chọn file!");
-
     const formData = new FormData();
     formData.append("title", title);
     formData.append("file", file);
-
-    try {
-      await axios.post("http://localhost:8000/upload", formData);
-      alert("Tải ảnh thành công!");
-      setTitle("");
-      setFile(null);
-      loadPhotos();
-    } catch (err) {
-      alert("Lỗi khi tải ảnh!");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn muốn xóa ảnh này?")) {
-      await axios.delete(`http://localhost:8000/photos/${id}`);
-      loadPhotos();
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    alert("Đã đăng xuất!");
-    navigate("/login");
+    await axios.post("http://localhost:8000/upload", formData);
+    setTitle("");
+    setFile(null);
+    loadPhotos();
   };
 
   return (
     <div style={{ padding: "20px", textAlign: "center" }}>
       <h1>📸 My Gallery - {user || "Guest"}</h1>
-
       {user ? (
-        <div style={{ marginBottom: "30px" }}>
-          <button onClick={handleLogout} style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "20px" }}>
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              navigate("/login");
+            }}
+          >
             Đăng xuất
           </button>
+          <br />
           <br />
           <form
             onSubmit={handleUpload}
             style={{
               border: "1px solid #ddd",
-              padding: "20px",
-              borderRadius: "10px",
+              padding: "15px",
               display: "inline-block",
             }}
           >
-            <h3>Tải ảnh mới</h3>
+            <h3>Upload ảnh mới</h3>
             <input
               type="text"
               placeholder="Tiêu đề"
@@ -90,7 +69,7 @@ const Gallery = () => {
             />
             <br />
             <br />
-            <button type="submit">Upload ngay</button>
+            <button type="submit">Tải lên</button>
           </form>
         </div>
       ) : (
@@ -105,7 +84,7 @@ const Gallery = () => {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
           gap: "20px",
-          marginTop: "20px",
+          marginTop: "30px",
         }}
       >
         {photos.map((p) => (
@@ -120,12 +99,21 @@ const Gallery = () => {
             <img
               src={p.image_url}
               alt={p.title}
-              style={{ width: "100%", height: "200px", objectFit: "cover" }}
+              style={{ width: "100%", height: "180px", objectFit: "cover" }}
             />
             <h4>{p.title}</h4>
+            <Link
+              to={`/photo/${p.id}`}
+              style={{ marginRight: "10px", color: "blue" }}
+            >
+              Xem chi tiết
+            </Link>
             {user && (
               <button
-                onClick={() => handleDelete(p.id)}
+                onClick={async () => {
+                  await axios.delete(`http://localhost:8000/photos/${p.id}`);
+                  loadPhotos();
+                }}
                 style={{ color: "red" }}
               >
                 Xóa
@@ -137,5 +125,4 @@ const Gallery = () => {
     </div>
   );
 };
-
 export default Gallery;
